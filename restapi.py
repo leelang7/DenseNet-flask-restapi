@@ -1,3 +1,4 @@
+# Image Classification Server
 from flask import request
 from flask import Flask
 from flask import jsonify
@@ -22,15 +23,24 @@ model = models.densenet121(pretrained=True)
 # 모델을 추론에만 사용할 것이므로, `eval` 모드로
 model.eval()
 
-# 여기서 주소를 자기가 저장한 곳으로
+# 이미지 분류 json 파일 경로
 imagenet_class_index = json.load(open('./imagenet_class_index.json'))
-
+'''
 def get_prediction(image_bytes):
     tensor = transform_image(image_bytes=image_bytes)
     outputs = model.forward(tensor)
     _, y_hat = outputs.max(1)
     predicted_idx = str(y_hat.item())
     return imagenet_class_index[predicted_idx]
+'''
+def get_prediction(image_bytes):
+    tensor = transform_image(image_bytes=image_bytes)
+    outputs = model.forward(tensor)
+    _, predicted_idx = outputs.max(1)
+    predicted_idx = predicted_idx.item()
+    predicted_class = imagenet_class_index[str(predicted_idx)]
+    probability = outputs.softmax(dim=1)[0][predicted_idx].item()
+    return predicted_idx, predicted_class, probability
 
 app = Flask(__name__)
 
@@ -47,9 +57,11 @@ def predict():
         # 파일을 바이트로
         img_bytes = file.read()
 
-        #예측해서 반환
-        class_id, class_name = get_prediction(image_bytes=img_bytes)
-        return jsonify({'class_id': class_id, 'class_name': class_name})
+        # 예측해서 반환
+        class_id, class_name, probability = get_prediction(image_bytes=img_bytes)
+        probability = round(probability, 2)
+        return jsonify({'class_id': class_id, 'class_name': class_name, 'probability': probability})
+
 
 if __name__ == '__main__':
     app.run()

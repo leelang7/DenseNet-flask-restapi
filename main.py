@@ -1,3 +1,4 @@
+# Local Test
 import io
 import torchvision.transforms as transforms
 from PIL import Image
@@ -25,7 +26,7 @@ def get_prediction(image_bytes):
     return y_hat
 '''
 import json
-# 여기서 주소를 자기가 저장한 곳으로
+# 이미지 분류 json 파일 경로
 imagenet_class_index = json.load(open('./imagenet_class_index.json'))
 
 def get_prediction(image_bytes):
@@ -35,7 +36,7 @@ def get_prediction(image_bytes):
     predicted_idx = str(y_hat.item())
     return imagenet_class_index[predicted_idx]
 
-# 여기서 주소를 자기가 저장한 곳으로
+# 예측할 이미지 경로
 with open("./cat.jpg", 'rb') as f:
     image_bytes = f.read()
     print(get_prediction(image_bytes=image_bytes))
